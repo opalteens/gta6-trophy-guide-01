@@ -1,61 +1,91 @@
-// Leonida Nights — GTA 6 trophy guide entry for gta6-trophy-guide-01.
+// Leonida Nights — a gta6-trophy-guide-01 entry (Node 22, standard library
+// only). The guide is this directory's app/ folder: plain static files the
+// browser opens at app/index.html (ES modules, CSS, no build step), offline —
+// it loads nothing over the network, and its trophy list and guides are
+// app/data/trophies.json. This program hands it in: it copies app/ and
+// screenshots/ from beside this file to the output directory and writes
+// dossier.json there with buildDossier from the vendored make.fun library.
+// Leave vendor/makefun-frontend.ts as it is: the scorer requires dossier.json
+// to be byte for byte what its own copy writes.
 //
-// main.ts (Node 22, standard library only) hands the guide in: it copies this
-// repository's app/ (static files: index.html, CSS, ES modules, data/trophies.json
-// with the official 55 trophies and this guide's own-words guides) and screenshots/
-// (4 real browser renders of the app) to /output, and writes /output/dossier.json
-// with buildDossier from vendor/makefun-frontend.ts, the kit's copy, unchanged.
-// Outside the grader, MAKEFUN_OUTPUT_DIR stands in for /output:
+// Before copying, the program checks its own inputs and refuses to hand in
+// a broken entry: app/index.html must exist, app/data/trophies.json must
+// parse and name all 55 official trophies with a non-blank guide each, and
+// screenshots/ must hold 3 or 4 images. Those are the same limits the gate
+// enforces, checked here first so a bad build fails loudly at home.
+//
+// Serve it locally with `node serve.ts`, then open http://localhost:8080.
+// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-//
-// Determinism: the copy is a plain recursive copy of fixed files and the dossier
-// is computed from those bytes alone, so two runs write identical bytes.
 
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-frontend.ts';
 
+const TROPHY_COUNT = 55;
+const MIN_SCREENSHOTS = 3;
+const MAX_SCREENSHOTS = 4;
+const DOSSIER_TEXT_MAX_BYTES = 163840;
+const SCREENSHOT_MAX_BYTES = 262144;
+const APP_MAX_FILES = 993;
+const APP_MAX_BYTES = 50331648;
+
 const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
-// Pre-flight sanity check on the trophy data: the gate requires all 55 official
-// trophies named with a non-blank guide, so refuse to hand in a broken list
-// rather than discovering it at grading time.
-const trophyData = JSON.parse(readFileSync(join(here, 'app', 'data', 'trophies.json'), 'utf8'));
-const trophyList = Array.isArray(trophyData) ? trophyData : trophyData.trophies;
-if (!Array.isArray(trophyList) || trophyList.length !== 55) {
-  throw new Error(`trophies.json must hold exactly 55 trophies, found ${Array.isArray(trophyList) ? trophyList.length : 'none'}`);
+function fail(message: string): never {
+  throw new Error(`Leonida Nights: ${message}`);
 }
-const grades = { platinum: 0, gold: 0, silver: 0, bronze: 0 };
-for (const t of trophyList) {
-  if (typeof t.name !== 'string' || !t.name.trim()) throw new Error('trophy with no name in trophies.json');
-  if (typeof t.guide !== 'string' || !t.guide.trim()) throw new Error(`trophy "${t.name}" has no guide`);
-  if (!(t.grade in grades)) throw new Error(`trophy "${t.name}" has unknown grade "${t.grade}"`);
-  grades[t.grade] += 1;
-}
-if (grades.platinum !== 1 || grades.gold !== 2 || grades.silver !== 6 || grades.bronze !== 46) {
-  throw new Error(`unexpected grade counts: ${JSON.stringify(grades)}`);
-}
-const missable = trophyList.filter((t) => t.missable === true);
-if (missable.length !== 1) throw new Error(`expected exactly 1 missable trophy, found ${missable.length}`);
 
-// Start from a clean output directory so stale files from an earlier run can
-// never leak into the handed-in entry.
-rmSync(out, { recursive: true, force: true });
+function checkInputs(): string[] {
+  if (!existsSync(join(here, 'app', 'index.html'))) fail('app/index.html is missing');
+  const trophiesPath = join(here, 'app', 'data', 'trophies.json');
+  if (!existsSync(trophiesPath)) fail('app/data/trophies.json is missing');
+  let data: unknown;
+  try {
+    data = JSON.parse(readFileSync(trophiesPath, 'utf8'));
+  } catch {
+    fail('app/data/trophies.json does not parse as JSON');
+  }
+  const list = (data as { trophies?: unknown[] }).trophies;
+  if (!Array.isArray(list) || list.length !== TROPHY_COUNT) {
+    fail(`app/data/trophies.json must hold ${TROPHY_COUNT} trophies, found ${Array.isArray(list) ? list.length : 'none'}`);
+  }
+  const names = new Set<string>();
+  let missable = 0;
+  for (const trophy of list) {
+    const item = trophy as { name?: unknown; guide?: unknown; missable?: unknown };
+    if (typeof item.name !== 'string' || item.name.length === 0) fail('a trophy has no name');
+    if (names.has(item.name)) fail(`trophy "${item.name}" is named twice`);
+    names.add(item.name);
+    if (typeof item.guide !== 'string' || item.guide.trim().length === 0) fail(`trophy "${item.name}" has no guide`);
+    if (item.missable === true) missable += 1;
+  }
+  if (missable !== 1) fail(`exactly one trophy must be flagged missable, found ${missable}`);
+  const shots = existsSync(join(here, 'screenshots'))
+    ? readdirSync(join(here, 'screenshots')).filter((name) => !name.startsWith('.'))
+    : [];
+  if (shots.length < MIN_SCREENSHOTS || shots.length > MAX_SCREENSHOTS) {
+    fail(`screenshots/ must hold ${MIN_SCREENSHOTS} to ${MAX_SCREENSHOTS} images, found ${shots.length}`);
+  }
+  for (const shot of shots) {
+    const size = statSync(join(here, 'screenshots', shot)).size;
+    if (size > SCREENSHOT_MAX_BYTES) fail(`screenshot ${shot} is ${size} bytes, over the ${SCREENSHOT_MAX_BYTES} byte cap`);
+  }
+  return shots;
+}
+
+const shots = checkInputs();
+
 mkdirSync(out, { recursive: true });
 cpSync(join(here, 'app'), join(out, 'app'), { recursive: true });
 mkdirSync(join(out, 'screenshots'), { recursive: true });
-if (existsSync(join(here, 'screenshots'))) {
-  cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
-}
+if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
 
-// The scorer's own caps (reference/gate.json): text_max_bytes shapes the dossier
-// text; the other caps refuse an entry the scorer would refuse (more than 4
-// screenshots or one over 256 KiB; more than 993 files and directories in app/
-// or 48 MiB of app files — app/ counts beside /output's own 1000-entry cap).
 writeFileSync(
   join(out, 'dossier.json'),
-  buildDossier(out, { text_max_bytes: 163840, screenshots: { max: 4, max_bytes: 262144 }, app_max_files: 993, app_max_bytes: 50331648 }),
+  buildDossier(out, { text_max_bytes: DOSSIER_TEXT_MAX_BYTES, screenshots: { max: MAX_SCREENSHOTS, max_bytes: SCREENSHOT_MAX_BYTES }, app_max_files: APP_MAX_FILES, app_max_bytes: APP_MAX_BYTES }),
 );
-console.log(`Leonida Nights handed in to ${out} — 55 trophies, grades ${JSON.stringify(grades)}, missable: ${missable[0].name}`);
+
+console.log(`Leonida Nights: ${TROPHY_COUNT} trophies, ${shots.length} screenshots, dossier written to ${join(out, 'dossier.json')}`);

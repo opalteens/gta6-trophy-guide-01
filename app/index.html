@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leonida Nights — GTA 6 Trophy Guide &amp; Tracker</title>
+<meta name="description" content="Offline guide and tracker for all 55 GTA 6 PlayStation 5 trophies: checklist, roadmap to the platinum, the one missable trophy, and a cited guide for every trophy.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">LN</div>
+    <div>
+      <h1>Leonida Nights</h1>
+      <p class="subtitle">GTA 6 trophy guide &amp; tracker — PlayStation 5 · 55 trophies · offline</p>
+    </div>
+  </div>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-numbers"><span id="earnedCount">0</span><span class="of"> / 55 earned</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <p class="progress-note" id="progressNote">Platinum: Vice Got a Price! — 0% complete</p>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Guide sections">
+  <button class="tab active" id="tabChecklist" data-view="checklist" type="button">Checklist</button>
+  <button class="tab" id="tabRoadmap" data-view="roadmap" type="button">Roadmap to Platinum</button>
+  <button class="tab" id="tabMissable" data-view="missable" type="button">Missable <span class="tab-badge">1</span></button>
+</nav>
+
+<section class="toolbar" aria-label="Filters and settings">
+  <label class="search-box">Search
+    <input id="searchInput" type="search" placeholder="Search name or description…" autocomplete="off">
+  </label>
+  <label class="field">Kind
+    <select id="kindFilter">
+      <option value="all">All kinds</option>
+      <option value="story">Story</option>
+      <option value="missable">Missable</option>
+      <option value="collectible">Collectibles</option>
+      <option value="activity">Activities</option>
+      <option value="online">Online</option>
+    </select>
+  </label>
+  <label class="field">Grade
+    <select id="gradeFilter">
+      <option value="all">All grades</option>
+      <option value="platinum">Platinum</option>
+      <option value="gold">Gold</option>
+      <option value="silver">Silver</option>
+      <option value="bronze">Bronze</option>
+    </select>
+  </label>
+  <label class="field">Show
+    <select id="earnedFilter">
+      <option value="all">All trophies</option>
+      <option value="earned">Earned only</option>
+      <option value="unearned">Unearned only</option>
+    </select>
+  </label>
+  <label class="toggle"><input id="spoilerToggle" type="checkbox"> <span>Spoiler-safe: hide hidden story trophies</span></label>
+  <div class="io-buttons">
+    <button id="exportBtn" type="button">Export progress</button>
+    <button id="importBtn" type="button">Import progress</button>
+    <input id="importFile" type="file" accept=".json,application/json" hidden>
+    <button id="resetBtn" type="button" class="danger">Reset</button>
+  </div>
+</section>
+
+<p class="grade-line" id="gradeLine">Official list: 1 platinum · 2 gold · 6 silver · 46 bronze · 28 hidden · 1 missable · 0 online trophies in this list.</p>
+
+<main class="layout">
+  <section class="list-col" aria-label="Trophy checklist">
+    <p class="list-count" id="listCount"></p>
+    <ul class="trophy-list" id="trophyList"></ul>
+    <p class="empty-note" id="emptyNote" hidden>No trophies match these filters.</p>
+  </section>
+  <aside class="detail-col" id="detailPane" aria-label="Trophy guide detail">
+    <p class="detail-hint">Select a trophy to see its guide, steps and sources.</p>
+  </aside>
+</main>
+
+<section class="roadmap-view" id="roadmapView" hidden>
+  <h2>Roadmap to the Platinum — about 200 hours</h2>
+  <p class="roadmap-intro">Built from the official descriptions: story first, then the open world, then the long grinds. The platinum, Vice Got a Price!, unlocks when the other 54 are earned.</p>
+  <div id="roadmapStages"></div>
+</section>
+
+<section class="missable-view" id="missableView" hidden>
+  <h2>Missable trophies — exactly 1 of 55</h2>
+  <p class="missable-intro">Read from the official descriptions: only one trophy turns on a choice that locks in once made. Every other trophy is a story beat, a count, or a collectible you can finish after the story ends.</p>
+  <div id="missableList"></div>
+  <h3>Why the other 54 are safe</h3>
+  <ul class="safe-list">
+    <li><strong>Story trophies (19):</strong> chapter and mission completions — they unlock by playing the story in order.</li>
+    <li><strong>Counts (250 stunts, 42 shooting-range golds, 100 vehicles, 100 WAiNK locations):</strong> cumulative totals that keep counting after the story.</li>
+    <li><strong>Collectibles (cards, meditation spots, garages, map areas):</strong> all still reachable in free roam after the finale.</li>
+    <li><strong>Activities (races, fishing, bowling, robberies):</strong> repeatable in the open world, nothing tied to a single story moment.</li>
+  </ul>
+</section>
+
+<footer class="footer">
+  <p>Sources for every trophy: the official list on Exophase (names, descriptions, grades) and PSNProfiles (PSN counts where PlayStation tracks one). Guides are this guide's own words, written from the official descriptions; where a place or step is not pinned down by the description, the guide says so plainly. No Rockstar artwork or logos are used. Works offline — progress is saved in your browser (localStorage) and never leaves your device.</p>
+  <p class="footer-links">Exophase: exophase.com/game/grand-theft-auto-vi-psn/trophies/ · PSNProfiles: psnprofiles.com/trophies/43531-grand-theft-auto-vi</p>
+</footer>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
